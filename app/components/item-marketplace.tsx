@@ -178,25 +178,25 @@ const ItemMarketplace = () => {
                               <div>
                                 <p className="text-sm font-semibold text-gray-200">Shop Price</p>
                                 <p className="text-sm">{parseInt(item.shop_price) > 0 
-                                  ? `${parseInt(item.shop_price).toLocaleString()} coins` 
+                                  ? `${(item.shop_price)} gp` 
                                   : 'Not sold in shops'}</p>
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-gray-200">Street Price</p>
                                 <p className="text-sm">{parseInt(item.street_price) > 0 
-                                  ? `${parseInt(item.street_price).toLocaleString()} coins` 
+                                  ? `${(item.street_price)} gp` 
                                   : 'No street value'}</p>
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-gray-200">High Alchemy</p>
                                 <p className="text-sm">{parseInt(item.high_alchemy) > 0 
-                                  ? `${parseInt(item.high_alchemy).toLocaleString()} coins` 
+                                  ? `${(item.high_alchemy).toLocaleString()} gp` 
                                   : 'No alch value'}</p>
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-gray-200">Low Alchemy</p>
                                 <p className="text-sm">{parseInt(item.low_alchemy) > 0 
-                                  ? `${parseInt(item.low_alchemy).toLocaleString()} coins` 
+                                  ? `${parseInt(item.low_alchemy).toLocaleString()} gp` 
                                   : 'No alch value'}</p>
                               </div>
                             </div>
