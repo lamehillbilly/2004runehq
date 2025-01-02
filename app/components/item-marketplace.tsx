@@ -2,13 +2,23 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Image from 'next/image';
+
+interface Item {
+  name: string;
+  location: string;
+  street_price: string;
+  shop_price: string;
+  members: string;
+  shop: string;
+  high_alchemy: string;
+  low_alchemy: string;
+}
 
 const ItemMarketplace = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [filters, setFilters] = useState({
     tradeable: false,
     membersOnly: false
@@ -52,7 +62,7 @@ const ItemMarketplace = () => {
   }, []);
 
   // Filter items based on search term and filters
-  const filteredItems = items.filter(item => {
+  const filteredItems = items.filter((item: Item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     const isTradeableMatch = !filters.tradeable || 
       (parseInt(item.street_price) > 0 || parseInt(item.shop_price) > 0);
@@ -61,7 +71,7 @@ const ItemMarketplace = () => {
   });
 
   // Handle creating a new post
-  const handlePostSubmit = (e) => {
+  const handlePostSubmit = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     if (!selectedItem) return;
     
@@ -148,13 +158,13 @@ const ItemMarketplace = () => {
               {/* Item Grid - Only show if searching */}
               {searchTerm && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-                  {filteredItems.map((item) => (
+                  {filteredItems.map((item: Item) => (
                     <div
                       key={item.name}
                       onClick={() => setSelectedItem(item)}
                       className={`border rounded-lg transition-all duration-200 ${
-                        selectedItem?.name === item.name 
-                          ? 'bg-primary/10 border-primary/40 ring-2 ring-primary/20' 
+                        selectedItem?.name === item.name
+                          ? 'bg-primary/10 border-primary/40 ring-2 ring-primary/20'
                           : 'hover:bg-background/50 cursor-pointer'
                       }`}
                     >
@@ -291,7 +301,7 @@ const ItemMarketplace = () => {
           <div className="max-w-7xl mx-auto">
             <form onSubmit={handlePostSubmit} className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <h3 className="font-semibold text-2xl mb-2 text-white">Create Post for {selectedItem.name}</h3>
+                <h3 className="font-semibold text-2xl mb-2 text-white">Create Post for {selectedItem?.name}</h3>
                 <div className="flex flex-wrap gap-2">
                   <select
                     className="px-3 py-2 border rounded-lg bg-background/90"
