@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from 'next/image';
 
 interface Item {
   name: string;
@@ -12,6 +13,7 @@ interface Item {
   shop: string;
   high_alchemy: string;
   low_alchemy: string;
+  logo_url: string;
 }
 
 const ItemMarketplace = () => {
@@ -23,21 +25,47 @@ const ItemMarketplace = () => {
     tradeable: false,
     membersOnly: false
   });
-  const [posts, setPosts] = useState([
-    {
+  
+  // Initialize posts state with useEffect to avoid hydration mismatch
+  const [posts, setPosts] = useState<{
+    id: number;
+    type: 'buy' | 'sell';
+    item: Item;
+    quantity: number;
+    price: number;
+    message: string;
+    world: string;
+    ingameName: string;
+    timestamp: string;
+  }[]>([]);
+  
+  useEffect(() => {
+    // Set initial posts after component mounts
+    setPosts([{
       id: 1,
       type: 'buy',
-      item: { name: 'Rune Scimitar', location: 'Player Smiths' },
+      item: {
+        name: 'Rune Scimitar',
+        location: 'Player Smiths',
+        street_price: '0',
+        shop_price: '25000',
+        members: 'false',
+        shop: 'Various Shops',
+        high_alchemy: '12000',
+        low_alchemy: '8000',
+        logo_url: ''
+      },
       quantity: 1,
       price: 30000,
       message: 'Looking for a good deal!',
       world: '1',
       ingameName: 'Player123',
       timestamp: new Date().toISOString()
-    }
-  ]);
+    }]);
+  }, []);
+
   const [newPost, setNewPost] = useState({
-    type: 'buy',
+    type: 'buy' as 'buy' | 'sell',
     quantity: '',
     price: '',
     message: '',
@@ -83,7 +111,7 @@ const ItemMarketplace = () => {
     const post = {
       id: Date.now(),
       item: selectedItem,
-      type: newPost.type,
+      type: newPost.type as 'buy' | 'sell',
       quantity: parseInt(newPost.quantity),
       price: parseInt(newPost.price),
       message: newPost.message,
@@ -104,11 +132,18 @@ const ItemMarketplace = () => {
     });
   };
 
+  // Add a filter handler to use setFilters
+  const handleFilterChange = (filterType: 'tradeable' | 'membersOnly') => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: !prev[filterType]
+    }));
+  };
+
   return (
-    <div className="min-h-screen  max-w-7xl mx-auto bg-background">
+    <div className="min-h-screen max-w-7xl mx-auto bg-background">
       {/* Main Content */}
       <div className="p-6 pb-32">
-        
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white font-bold text-2xl">Item Marketplace</CardTitle>
@@ -127,7 +162,7 @@ const ItemMarketplace = () => {
           <CardContent>
             <div className="space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2  " />
+                <Search className="absolute left-3 top-1/4 transform -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Search items..."
@@ -135,27 +170,28 @@ const ItemMarketplace = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-              </div>
-              
-              <div className="flex flex-wrap gap-4">
-                
-              </div>
-
-              {searchTerm && (
-                <div className="flex items-center justify-between text-sm text-white px-1">
-                  <span>{filteredItems.length} items found</span>
-                  {(filters.tradeable || filters.membersOnly) && (
-                    <button
-                      onClick={() => setFilters({ tradeable: false, membersOnly: false })}
-                      className="text-primary hover:text-primary"
-                    >
-                      Clear Filters
-                    </button>
-                  )}
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={filters.tradeable}
+                      onChange={() => handleFilterChange('tradeable')}
+                      className="rounded"
+                    />
+                    <span>Tradeable Only</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={filters.membersOnly}
+                      onChange={() => handleFilterChange('membersOnly')}
+                      className="rounded"
+                    />
+                    <span>Members Only</span>
+                  </label>
                 </div>
-              )}
+              </div>
 
-              {/* Item Grid - Only show if searching */}
               {searchTerm && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
                   {filteredItems.map((item: Item) => (
@@ -169,9 +205,39 @@ const ItemMarketplace = () => {
                       }`}
                     >
                       <div className="p-4">
-                        <h3 className="font-semibold text-white text-lg">{item.name}</h3>
-                        <p className="text-md text-gray-100 mt-1">📍 {item.location}</p>
-                        
+                        <div className="flex items-start gap-3">
+                          {/* Item Image */}
+                          <div className="relative w-12 h-12 flex-shrink-0">
+                            {item.logo_url && item.logo_url.includes('githubusercontent.com') ? (
+                              <Image
+                                src={item.logo_url}
+                                alt={item.name}
+                                width={48}
+                                height={48}
+                                className="object-contain"
+                                priority
+                                onError={(e) => {
+                                  // If image fails to load, replace with fallback
+                                  const target = e.target as HTMLElement;
+                                  target.style.display = 'none';
+                                  const fallback = target.parentElement?.querySelector('.fallback') as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : (
+                              <div className="fallback w-12 h-12 bg-background/50 rounded flex items-center justify-center">
+                                <span className="text-xs text-gray-400">No image</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Item Details */}
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-white text-lg">{item.name}</h3>
+                            <p className="text-md text-gray-100 mt-1">📍 {item.location}</p>
+                          </div>
+                        </div>
+
                         {selectedItem?.name === item.name && (
                           <div className="mt-3 pt-3 border-t border-primary/20">
                             <div className="grid grid-cols-2 gap-3">
@@ -200,18 +266,6 @@ const ItemMarketplace = () => {
                                   : 'No alch value'}</p>
                               </div>
                             </div>
-                            <div className="mt-3 flex gap-2">
-                              {item.shop === "true" && (
-                                <span className="text-sm font-semibold px-2 py-1 bg-green-100 text-green-700 rounded">
-                                  Shop Item
-                                </span>
-                              )}
-                              {item.members === "true" && (
-                                <span className="text-sm px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
-                                  Members Item
-                                </span>
-                              )}
-                            </div>
                           </div>
                         )}
                       </div>
@@ -224,7 +278,7 @@ const ItemMarketplace = () => {
         </Card>
       </div>
 
-      {/* Collapsible Sidebar */}
+      {/* Sidebar */}
       <div
         className={`fixed top-0 right-0 h-full w-[25%] bg-background shadow-lg transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
@@ -243,58 +297,48 @@ const ItemMarketplace = () => {
           
           <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-4">
-              {posts.length > 0 ? (
-                posts.map((post) => (
-                  <div 
-                    key={post.id} 
-                    className={`border-l-4 rounded-lg bg-background/40 shadow p-3 ${
-                      post.type === 'buy' ? 'border-l-primary' : 'border-l-red-500'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2 text-white">
-                      <span className={`px-2 py-0.5 rounded text-xs ${
-                        post.type === 'buy' ? 'bg-primary/10 text-primary' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {post.type === 'buy' ? '🟢 WTB' : '🔴 WTS'}
-                      </span>
-                      <h3 className="font-medium text-md truncate">
-                        {post.item.name}
-                      </h3>
-                    </div>
-                    <div className="text-md space-y-1">
-                      <p className="text-gray-400">
-                        Qty: {post.quantity.toLocaleString()} @ {post.price.toLocaleString()}ea
-                      </p>
-                      <p className="text-gray-400">
-                        World {post.world} • {post.ingameName}
-                      </p>
-                      {post.message && (
-                        <p className="text-gray-500 italic truncate">{post.message}</p>
-                      )}
-                      <p className="text-gray-400">
-                        {new Date(post.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
+              {posts.map((post) => (
+                <div 
+                  key={post.id} 
+                  className={`border-l-4 rounded-lg bg-background/40 shadow p-3 ${
+                    post.type === 'buy' ? 'border-l-primary' : 'border-l-red-500'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2 text-white">
+                    <span className={`px-2 py-0.5 rounded text-xs ${
+                      post.type === 'buy' ? 'bg-primary/10 text-primary' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {post.type === 'buy' ? '🟢 WTB' : '🔴 WTS'}
+                    </span>
+                    <h3 className="font-medium text-md truncate">
+                      {post.item.name}
+                    </h3>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-500 text-md">
-                  No posts yet
+                  <div className="text-md space-y-1">
+                    <p className="text-gray-400">
+                      Qty: {post.quantity.toLocaleString()} @ {post.price.toLocaleString()}ea
+                    </p>
+                    <p className="text-gray-400">
+                      World {post.world} • {post.ingameName}
+                    </p>
+                    {post.message && (
+                      <p className="text-gray-500 italic truncate">{post.message}</p>
+                    )}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Overlay when sidebar is open */}
+      {/* Overlay */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
       {/* Sticky Post Creation Form */}
       {selectedItem && (
         <div className="fixed bottom-0 left-0 right-0 bg-secondary border-t shadow-lg p-4 h-[15%]">
@@ -306,7 +350,7 @@ const ItemMarketplace = () => {
                   <select
                     className="px-3 py-2 border rounded-lg bg-background/90"
                     value={newPost.type}
-                    onChange={(e) => setNewPost({...newPost, type: e.target.value})}
+                    onChange={(e) => setNewPost({...newPost, type: e.target.value as 'buy' | 'sell'})}
                   >
                     <option value="buy">Buying</option>
                     <option value="sell">Selling</option>
